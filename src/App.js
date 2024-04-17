@@ -1,12 +1,23 @@
-import React, { useState, useEffect, useRef } from "react"; // Added useRef import
+import React, { useState, useEffect, useRef } from "react";
 import TranslatedText from "./components/TranslatedText";
 
 function App() {
-  const [translations, setTranslations] = useState([]); // Initialize as an array, not a string
+  const [translations, setTranslations] = useState([]);
   const messagesEndRef = useRef(null);
+  const containerRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToCenter = () => {
+    window.requestAnimationFrame(() => {
+      if (containerRef.current && messagesEndRef.current) {
+        const containerHeight = containerRef.current.offsetHeight;
+        const messageHeight = messagesEndRef.current.offsetHeight;
+        const scrollPosition =
+          messagesEndRef.current.offsetTop -
+          containerHeight / 2 +
+          messageHeight / 2;
+        containerRef.current.scrollTop = scrollPosition;
+      }
+    });
   };
 
   useEffect(() => {
@@ -21,7 +32,6 @@ function App() {
             ...prevTranslations,
             message.translation,
           ]);
-          scrollToBottom();
         }
       } catch (error) {
         console.error("Failed to parse message:", error);
@@ -31,26 +41,37 @@ function App() {
     return () => ws.close();
   }, []);
 
+  useEffect(() => {
+    scrollToCenter();
+  }, [translations]);
+
   return (
     <div
-      className="App overflow-y-auto h-96 bg-gray-100 p-4 space-y-2 font-sans text-dark"
+      className="min-h-screen w-full overflow-hidden p-4 flex items-center justify-center"
       aria-live="polite"
     >
-      {translations.map((text, index) => (
-        <div
-          key={index}
-          className={`transition-opacity duration-300 ease-in-out ${
-            index < translations.length - 5
-              ? "opacity-50"
-              : "bg-current-bg opacity-100"
-          }`}
-        >
-          <div className="p-2 md:p-4 line-normal bg-highlight-bg">
+      <div
+        ref={containerRef}
+        className="w-full max-h-full overflow-y-auto flex flex-col justify-center items-center"
+      >
+        {translations.map((text, index) => (
+          <p
+            key={index}
+            style={{
+              opacity: 1 - (translations.length - index - 1) * 0.05,
+              transition: "opacity 0.5s ease-in-out",
+              fontWeight: `${
+                index === translations.length - 1 ? "bold" : "normal"
+              }`,
+              color: `${index === translations.length - 1 ? "#fff" : "#ccc"}`,
+            }}
+            className="leading-relaxed text-center last:mb-0"
+          >
             <TranslatedText text={text} />
-          </div>
-        </div>
-      ))}
-      <div ref={messagesEndRef} />
+          </p>
+        ))}
+        <div ref={messagesEndRef} className="h-1" />
+      </div>
     </div>
   );
 }

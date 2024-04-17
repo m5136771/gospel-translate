@@ -32,12 +32,6 @@ wss.on("connection", function connection(ws) {
   ws.send(JSON.stringify(message));
 });
 
-app.get("/api/translate", (req, res) => {
-  res.json({
-    translation: "This endpoint is now redundant and can be removed.",
-  });
-});
-
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
